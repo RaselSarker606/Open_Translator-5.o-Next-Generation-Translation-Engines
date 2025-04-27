@@ -1,0 +1,118 @@
+import streamlit as st
+import google.generativeai as genai
+import os
+
+# Set up the Google API Key
+os.environ["GOOGLE_API_KEY"] = "AIzaSyAqtUlUwuP_fe0nfT1he3qmKb6yJjhlLds"
+genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+
+# Initialize the Gemini model
+model = genai.GenerativeModel("models/gemini-1.5-pro")
+
+def language_translate(text, source_lang, target_lang):
+    prompt = f"""
+    Translate the following text from {source_lang} to {target_lang}:
+
+    {text}
+
+don't add anything    """
+    response = model.generate_content(prompt)
+    return response.text if response else "Translation failed."
+
+st.markdown("""
+    <style>
+        html, body {
+            background: linear-gradient(to right, #ff9a9e, #fad0c4);
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2e2e2e;
+            font-size: 36px;
+            padding: 20px 0;
+            font-weight: bold;
+        }
+
+        .stTextArea, .stSelectbox, .stButton {
+            transition: all 0.3s ease-in-out;
+        }
+
+        .stTextArea:hover, .stSelectbox:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transform: scale(1.02);
+        }
+
+        .stTextArea, .stSelectbox {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 10px;
+        }
+
+        .stTextArea textarea, .stTextInput input {
+            border: none !important;
+            background-color: #ffffff !important;
+            font-size: 16px;
+        }
+
+        .stButton>button {
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .stButton>button:hover {
+            background: linear-gradient(to right, #0072ff, #00c6ff);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+            transform: scale(1.03);
+        }
+
+        textarea {
+            font-size: 16px !important;
+            padding: 10px !important;
+            border-radius: 12px !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+
+
+# Language options
+languages = [
+    "English", "Spanish", "French", "German", "Urdu", "Hindi", "Chinese",
+    "Japanese", "Russian", "Arabic", "Portuguese", "Bangla", "Korean",
+    "Italian", "Turkish", "Dutch", "Greek", "Thai", "Vietnamese", "Hebrew"
+]
+# Session state
+if "source_lang" not in st.session_state:
+    st.session_state.source_lang = "English"
+if "target_lang" not in st.session_state:
+    st.session_state.target_lang = "Spanish"
+
+# Title
+st.markdown("<h1>RAS_GenAI Translator mini 5.o </h1>", unsafe_allow_html=True)
+
+# Layout
+col1, col2 = st.columns(2)
+with col1:
+    st.session_state.source_lang = st.selectbox("From", languages, index=languages.index(st.session_state.source_lang))
+    user_text = st.text_area("Enter your text here:", key="input_text", height=200)
+
+with col2:
+    st.session_state.target_lang = st.selectbox("To", languages, index=languages.index(st.session_state.target_lang))
+    translated_output = st.empty()
+
+# Translate button
+if st.button("Translate", key="translate", type="primary"):
+    if user_text.strip():
+        translation = language_translate(user_text, st.session_state.source_lang, st.session_state.target_lang)
+        translated_output.text_area("Translated Text:", translation, height=200)
+    else:
+        st.warning("Please enter some text to translate.")
